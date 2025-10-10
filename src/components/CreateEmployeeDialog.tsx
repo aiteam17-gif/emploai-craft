@@ -35,6 +35,11 @@ const GENDER_OPTIONS = [
   { value: "neutral", label: "Neutral" },
 ];
 
+const generateAvatarUrl = (name: string, expertise: string): string => {
+  const seed = encodeURIComponent(`${name}-${expertise}`);
+  return `https://api.dicebear.com/9.x/thumbs/svg?seed=${seed}&radius=50`;
+};
+
 interface CreateEmployeeDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -60,17 +65,20 @@ export const CreateEmployeeDialog = ({ open, onOpenChange, userId }: CreateEmplo
 
     setLoading(true);
     try {
+      const avatarUrl = generateAvatarUrl(name.trim(), expertise);
+      
       const { error } = await supabase.from("employees").insert({
         user_id: userId,
         name: name.trim(),
         gender: gender as "male" | "female" | "neutral",
         expertise: expertise as "HR" | "Marketing & Design" | "Technology" | "Finance" | "GTM & Market Analysis" | "Report Polishing",
+        avatar_url: avatarUrl,
       });
 
       if (error) throw error;
 
       toast({
-        title: "Employee created!",
+        title: "Employee saved",
         description: `${name} is ready to help you.`,
       });
 

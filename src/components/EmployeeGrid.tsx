@@ -1,9 +1,10 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { EmployeeCard } from "./EmployeeCard";
 import { Button } from "./ui/button";
-import { Plus, Users } from "lucide-react";
+import { Input } from "./ui/input";
+import { Plus, Users, Search } from "lucide-react";
 
 interface Employee {
   id: string;
@@ -23,6 +24,7 @@ interface EmployeeGridProps {
 export const EmployeeGrid = ({ userId, onCreateClick }: EmployeeGridProps) => {
   const [employees, setEmployees] = useState<Employee[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
 
   const fetchEmployees = async () => {
@@ -61,8 +63,8 @@ export const EmployeeGrid = ({ userId, onCreateClick }: EmployeeGridProps) => {
       if (error) throw error;
 
       toast({
-        title: "Employee removed",
-        description: "Employee has been soft-deleted. You can restore within 30 days.",
+        title: "Removed",
+        description: "Employee has been removed.",
       });
 
       fetchEmployees();
@@ -75,11 +77,22 @@ export const EmployeeGrid = ({ userId, onCreateClick }: EmployeeGridProps) => {
     }
   };
 
+  const filteredEmployees = useMemo(() => {
+    if (!searchQuery.trim()) return employees;
+    
+    const query = searchQuery.toLowerCase();
+    return employees.filter(
+      (emp) =>
+        emp.name.toLowerCase().includes(query) ||
+        emp.expertise.toLowerCase().includes(query)
+    );
+  }, [employees, searchQuery]);
+
   if (loading) {
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <div className="space-y-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="aspect-[3/4] rounded-2xl bg-muted animate-pulse" />
+          <div key={i} className="h-[72px] rounded-xl bg-muted animate-pulse" />
         ))}
       </div>
     );
@@ -104,14 +117,38 @@ export const EmployeeGrid = ({ userId, onCreateClick }: EmployeeGridProps) => {
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      {employees.map((employee) => (
-        <EmployeeCard
-          key={employee.id}
-          employee={employee}
-          onDelete={handleDelete}
-        />
-      ))}
+    <div className="space-y-4">
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            type="text"
+            placeholder="Search by name or expertise..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-9"
+          />
+        </div>
+        <Button onClick={onCreateClick} size="sm">
+          <Plus className="mr-2 h-4 w-4" />
+          Create Employee
+        </Button>
+      </div>
+
+      <div className="max-h-[70vh] overflow-y-auto pr-1 space-y-2">
+        {filteredEmployees.map((employee) => (
+          <EmployeeCard
+            key={employee.id}
+            employee={employee}
+            onDelete={handleDelete}
+          />
+        ))}
+        {filteredEmployees.length === 0 && (
+          <div className="text-center py-12 text-muted-foreground">
+            No employees found matching "{searchQuery}"
+          </div>
+        )}
+      </div>
     </div>
   );
 };

@@ -80,7 +80,7 @@ const Home = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8">
+      <main className="container mx-auto px-4 py-8 max-w-4xl">
         <EmployeeGrid userId={user.id} onCreateClick={() => setCreateDialogOpen(true)} />
       </main>
 

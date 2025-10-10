@@ -18,6 +18,7 @@ interface Employee {
   id: string;
   name: string;
   expertise: string;
+  avatar_url: string | null;
 }
 
 const Employee = () => {
@@ -250,6 +251,11 @@ const Employee = () => {
         <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
+        <img
+          src={employee.avatar_url || `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(employee.name)}&radius=50`}
+          alt={`${employee.name} avatar`}
+          className="h-10 w-10 rounded-full border object-cover"
+        />
         <div>
           <h1 className="font-bold text-lg">{employee.name}</h1>
           <p className="text-sm text-muted-foreground">{employee.expertise}</p>

@@ -94,3 +94,22 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Custom scrollbar styles */
+@layer utilities {
+  .overflow-y-auto::-webkit-scrollbar {
+    width: 6px;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb {
+    @apply bg-border rounded-full;
+  }
+  
+  .overflow-y-auto::-webkit-scrollbar-thumb:hover {
+    @apply bg-border/80;
+  }
+}
