@@ -6,6 +6,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, LogOut, Briefcase } from "lucide-react";
 import { EmployeeGrid } from "@/components/EmployeeGrid";
 import { CreateEmployeeDialog } from "@/components/CreateEmployeeDialog";
+import { DashboardInsights } from "@/components/DashboardInsights";
+import { TaskHistory } from "@/components/TaskHistory";
 
 const Home = () => {
   const [user, setUser] = useState<any>(null);
@@ -28,8 +30,9 @@ const Home = () => {
       setUser(session?.user ?? null);
       if (!session) {
         navigate("/auth");
+      } else {
+        setLoading(false);
       }
-      setLoading(false);
     });
 
     return () => subscription.unsubscribe();
@@ -80,8 +83,17 @@ const Home = () => {
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-8 max-w-4xl">
-        <EmployeeGrid userId={user.id} onCreateClick={() => setCreateDialogOpen(true)} />
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <DashboardInsights userId={user.id} />
+        
+        <div className="grid lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <EmployeeGrid userId={user.id} onCreateClick={() => setCreateDialogOpen(true)} />
+          </div>
+          <div className="lg:col-span-1">
+            <TaskHistory userId={user.id} />
+          </div>
+        </div>
       </main>
 
       <CreateEmployeeDialog
