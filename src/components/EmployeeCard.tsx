@@ -45,7 +45,10 @@ export const EmployeeCard = ({ employee, onDelete }: EmployeeCardProps) => {
 
   return (
     <>
-      <div className="flex items-center justify-between gap-3 rounded-xl border bg-card px-3 py-2 shadow-sm hover:shadow-md transition-shadow">
+      <div 
+        className="flex items-center justify-between gap-3 rounded-xl border bg-card px-3 py-2 shadow-sm hover:shadow-md transition-shadow cursor-pointer"
+        onClick={() => navigate(`/employee/${employee.id}`)}
+      >
         <div className="flex items-center gap-3 min-w-0 flex-1">
           <img
             src={employee.avatar_url || `https://api.dicebear.com/9.x/thumbs/svg?seed=${encodeURIComponent(employee.name)}&radius=50`}
@@ -61,7 +64,12 @@ export const EmployeeCard = ({ employee, onDelete }: EmployeeCardProps) => {
         </div>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="flex-shrink-0">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="flex-shrink-0"
+              onClick={(e) => e.stopPropagation()}
+            >
               <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
