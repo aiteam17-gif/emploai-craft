@@ -240,7 +240,7 @@ const Employee = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <header className="border-b px-4 py-4 flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate("/")}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/dashboard")}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <img
