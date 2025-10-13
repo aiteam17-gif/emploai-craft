@@ -184,14 +184,17 @@ const Employee = () => {
 
           if (line.endsWith("\r")) line = line.slice(0, -1);
           if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data: ")) continue;
+          if (!line.startsWith("data:")) continue; // accept both "data:" and "data: "
 
-          const jsonStr = line.slice(6).trim();
+          const jsonStr = line.slice(5).replace(/^data:\s*/, "").trim();
           if (jsonStr === "[DONE]") break;
 
           try {
             const parsed = JSON.parse(jsonStr);
-            const content = parsed.choices?.[0]?.delta?.content;
+            let content = parsed.choices?.[0]?.delta?.content;
+            if (!content && parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
+              content = parsed.candidates[0].content.parts[0].text;
+            }
             if (content) {
               assistantContent += content;
               setMessages((prev) =>

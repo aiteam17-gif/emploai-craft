@@ -61,13 +61,21 @@ export const PriorityBoard = ({ userId }: PriorityBoardProps) => {
   const lanes = useMemo(() => {
     const grouped: Record<Priority, Task[]> = { P1: [], P2: [], P3: [], null: [] } as any;
     for (const t of tasks) {
-      const p = (t.priority as Priority) ?? null;
+      // normalize common values to P1/P2/P3
+      let norm: Priority = null;
+      const raw = (t.priority || "").toLowerCase();
+      if (raw === "p1" || raw === "high") norm = "P1";
+      else if (raw === "p2" || raw === "medium") norm = "P2";
+      else if (raw === "p3" || raw === "low") norm = "P3";
+      else norm = (t.priority as Priority) ?? null;
+      (t as any).__normPriority = norm;
+      const p = norm;
       grouped[p]?.push(t);
     }
     for (const key of Object.keys(grouped)) {
       grouped[key as Priority]?.sort((a, b) => {
-        const ao = priorityOrder[a.priority || "P3"] ?? 2;
-        const bo = priorityOrder[b.priority || "P3"] ?? 2;
+        const ao = priorityOrder[(a as any).__normPriority || "P3"] ?? 2;
+        const bo = priorityOrder[(b as any).__normPriority || "P3"] ?? 2;
         if (ao !== bo) return ao - bo;
         return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       });
@@ -106,7 +114,7 @@ export const PriorityBoard = ({ userId }: PriorityBoardProps) => {
                       )}
                     </div>
                     <div className="flex flex-col items-end gap-2">
-                      <Badge variant={t.priority === "P1" ? "destructive" : "secondary"}>{t.priority || "—"}</Badge>
+                      <Badge variant={(t as any).__normPriority === "P1" ? "destructive" : "secondary"}>{(t as any).__normPriority || "—"}</Badge>
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>

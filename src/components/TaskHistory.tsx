@@ -125,7 +125,7 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
       title: formData.title,
       description: formData.description,
       priority: formData.priority,
-      assigned_employee_id: formData.assigned_employee_id || null,
+      assigned_employee_id: (formData.assigned_employee_id || formData.suggested_employee_id) || null,
       created_by: userId,
       status: "pending",
     });

@@ -10,7 +10,10 @@ export async function callAI(params: {
     const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai`
     return fetch(url, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      },
       body: JSON.stringify({ model: 'gpt-4o-mini', temperature: 0.7, messages }),
       signal
     })
@@ -19,7 +22,10 @@ export async function callAI(params: {
   const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`
   return fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+    },
     body: JSON.stringify({ messages, expertise, memory }),
     signal
   })
