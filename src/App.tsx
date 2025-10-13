@@ -10,6 +10,9 @@ import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import Supervisor from "./pages/Supervisor";
 import Settings from "./pages/Settings";
+import EmployeeGroups from "./pages/EmployeeGroups";
+import TaskVerifier from "./pages/TaskVerifier";
+import AIMessaging from "./pages/AIMessaging";
 
 const queryClient = new QueryClient();
 
@@ -23,6 +26,9 @@ const App = () => (
           <Route path="/" element={<Landing />} />
           <Route path="/dashboard" element={<Home />} />
           <Route path="/supervisor" element={<Supervisor />} />
+          <Route path="/groups" element={<EmployeeGroups />} />
+          <Route path="/verifier" element={<TaskVerifier />} />
+          <Route path="/ai-messaging" element={<AIMessaging />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/employee/:id" element={<Employee />} />
           <Route path="/settings" element={<Settings />} />
