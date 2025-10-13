@@ -6,16 +6,19 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserMenu } from "@/components/UserMenu";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Send, MessageSquare, Bot } from "lucide-react";
+import { Loader2, Send, MessageSquare, Bot, Crown, Briefcase } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Badge } from "@/components/ui/badge";
 
 interface Employee {
   id: string;
   name: string;
   expertise: string;
   avatar_url: string | null;
+  level: "junior" | "senior";
+  role: "employee" | "manager";
 }
 
 interface Message {
@@ -51,9 +54,11 @@ const AIMessaging = () => {
   const fetchEmployees = async (userId: string) => {
     const { data } = await supabase
       .from("employees")
-      .select("id, name, expertise, avatar_url")
+      .select("id, name, expertise, avatar_url, level, role")
       .eq("user_id", userId)
-      .is("deleted_at", null);
+      .is("deleted_at", null)
+      .order("role", { ascending: false }) // Managers first
+      .order("created_at", { ascending: true });
 
     if (data) setEmployees(data);
   };
@@ -200,9 +205,63 @@ const AIMessaging = () => {
           </CardHeader>
           <CardContent>
             {!selectedEmployee ? (
-              <div className="text-center text-muted-foreground py-12">
-                <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                <p>Select an employee to start messaging</p>
+              <div className="space-y-4">
+                <div className="text-center mb-6">
+                  <Bot className="w-12 h-12 mx-auto mb-3 text-primary" />
+                  <h3 className="text-lg font-semibold mb-2">Select an Employee to Chat</h3>
+                  <p className="text-sm text-muted-foreground">Choose from your available AI employees below</p>
+                </div>
+                
+                <div className="grid gap-3">
+                  {employees.map((emp) => (
+                    <Card 
+                      key={emp.id}
+                      className="cursor-pointer hover:bg-accent transition-colors"
+                      onClick={() => setSelectedEmployee(emp.id)}
+                    >
+                      <CardContent className="p-4">
+                        <div className="flex items-center gap-3">
+                          <Avatar className="w-12 h-12">
+                            <AvatarImage src={emp.avatar_url || undefined} />
+                            <AvatarFallback>{emp.name[0]}</AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2">
+                              <h4 className="font-semibold">{emp.name}</h4>
+                              {emp.role === "manager" && (
+                                <Crown className="h-4 w-4 text-yellow-500" />
+                              )}
+                            </div>
+                            <p className="text-sm text-muted-foreground">{emp.expertise}</p>
+                            <div className="flex gap-2 mt-1">
+                              <Badge variant="secondary" className="text-xs capitalize">
+                                <Briefcase className="h-3 w-3 mr-1" />
+                                {emp.level}
+                              </Badge>
+                              {emp.role === "manager" && (
+                                <Badge variant="default" className="text-xs">Manager</Badge>
+                              )}
+                            </div>
+                          </div>
+                          <MessageSquare className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {employees.length === 0 && (
+                  <div className="text-center text-muted-foreground py-8">
+                    <p>No employees available. Create some employees first.</p>
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => navigate("/dashboard")}
+                    >
+                      Go to Dashboard
+                    </Button>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="space-y-4">
