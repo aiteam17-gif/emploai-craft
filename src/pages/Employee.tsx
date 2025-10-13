@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft, Send, Loader2 } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { callAI } from "@/lib/ai";
 
 interface Message {
   id: string;
@@ -153,22 +154,11 @@ const Employee = () => {
         content: m.content,
       }));
 
-      const response = await fetch(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/chat`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-        },
-        body: JSON.stringify({
-          messages: chatMessages,
-          expertise: employee.expertise,
-          memory: memory.data || [],
-        }),
-      });
-
-      if (!response.ok || !response.body) {
-        throw new Error("Failed to get AI response");
-      }
+      // read aiProvider from user metadata
+      const session = (await supabase.auth.getSession()).data.session;
+      const aiProvider = ((session?.user?.user_metadata as any)?.aiProvider as string) || "gemini";
+      const response = await callAI({ provider: aiProvider as any, messages: chatMessages as any, expertise: employee.expertise, memory: memory.data || [] });
+      if (!response.ok || !response.body) throw new Error("Failed to get AI response");
 
       const reader = response.body.getReader();
       const decoder = new TextDecoder();
