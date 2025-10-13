@@ -51,6 +51,15 @@ const EmployeeGroups = () => {
   }, [navigate]);
 
   const fetchData = async (userId: string) => {
+    // Fetch groups
+    const { data: groupsData } = await supabase
+      .from("groups")
+      .select("*")
+      .eq("created_by", userId)
+      .order("created_at", { ascending: false });
+    
+    if (groupsData) setGroups(groupsData);
+
     // Fetch employees
     const { data: empData } = await supabase
       .from("employees")
@@ -64,14 +73,94 @@ const EmployeeGroups = () => {
   const createGroup = async () => {
     if (!groupName.trim() || !user) return;
 
-    toast({
-      title: "Success",
-      description: "Group created successfully",
-    });
+    const { error } = await supabase
+      .from("groups")
+      .insert({
+        name: groupName,
+        description: groupDesc,
+        created_by: user.id,
+      });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to create group",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Group created successfully",
+      });
+      fetchData(user.id);
+      setDialogOpen(false);
+      setGroupName("");
+      setGroupDesc("");
+    }
+  };
+
+  const deleteGroup = async (groupId: string) => {
+    const { error } = await supabase
+      .from("groups")
+      .delete()
+      .eq("id", groupId);
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete group",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Success",
+        description: "Group deleted",
+      });
+      fetchData(user.id);
+      setSelectedGroup(null);
+    }
+  };
+
+  const loadGroupMembers = async (groupId: string) => {
+    const { data } = await supabase
+      .from("group_members")
+      .select("employee_id")
+      .eq("group_id", groupId);
     
-    setDialogOpen(false);
-    setGroupName("");
-    setGroupDesc("");
+    if (data) {
+      setGroupMembers(data.map((m) => m.employee_id));
+    }
+  };
+
+  const toggleMember = async (employeeId: string) => {
+    if (!selectedGroup) return;
+
+    const isMember = groupMembers.includes(employeeId);
+
+    if (isMember) {
+      const { error } = await supabase
+        .from("group_members")
+        .delete()
+        .eq("group_id", selectedGroup)
+        .eq("employee_id", employeeId);
+
+      if (!error) {
+        setGroupMembers((prev) => prev.filter((id) => id !== employeeId));
+        toast({ title: "Member removed" });
+      }
+    } else {
+      const { error } = await supabase
+        .from("group_members")
+        .insert({
+          group_id: selectedGroup,
+          employee_id: employeeId,
+        });
+
+      if (!error) {
+        setGroupMembers((prev) => [...prev, employeeId]);
+        toast({ title: "Member added" });
+      }
+    }
   };
 
   if (loading) {
@@ -143,30 +232,80 @@ const EmployeeGroups = () => {
               </Dialog>
             </CardHeader>
             <CardContent>
-              <div className="text-sm text-muted-foreground text-center py-8">
-                No groups yet. Create your first group to organize employees.
-              </div>
+              {groups.length === 0 ? (
+                <div className="text-sm text-muted-foreground text-center py-8">
+                  No groups yet. Create your first group to organize employees.
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {groups.map((group) => (
+                    <div
+                      key={group.id}
+                      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+                        selectedGroup === group.id ? "bg-accent" : "hover:bg-accent/50"
+                      }`}
+                      onClick={() => {
+                        setSelectedGroup(group.id);
+                        loadGroupMembers(group.id);
+                      }}
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="font-medium">{group.name}</div>
+                          {group.description && (
+                            <div className="text-sm text-muted-foreground">{group.description}</div>
+                          )}
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            deleteGroup(group.id);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
 
           <Card className="md:col-span-2">
             <CardHeader>
-              <CardTitle>Available Employees</CardTitle>
+              <CardTitle>
+                {selectedGroup ? "Manage Group Members" : "Available Employees"}
+              </CardTitle>
             </CardHeader>
             <CardContent>
-              {employees.length === 0 ? (
+              {!selectedGroup ? (
+                <div className="text-sm text-muted-foreground text-center py-8">
+                  Select a group to manage members
+                </div>
+              ) : employees.length === 0 ? (
                 <div className="text-sm text-muted-foreground text-center py-8">
                   No employees available. Create employees first.
                 </div>
               ) : (
                 <div className="space-y-2">
                   {employees.map((emp) => (
-                    <div key={emp.id} className="flex items-center justify-between p-3 border rounded-lg hover:bg-accent">
-                      <div>
-                        <div className="font-medium">{emp.name}</div>
-                        <div className="text-sm text-muted-foreground">{emp.expertise}</div>
+                    <div key={emp.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <Checkbox
+                          checked={groupMembers.includes(emp.id)}
+                          onCheckedChange={() => toggleMember(emp.id)}
+                        />
+                        <div>
+                          <div className="font-medium">{emp.name}</div>
+                          <div className="text-sm text-muted-foreground">{emp.expertise}</div>
+                        </div>
                       </div>
-                      <Badge variant="outline">Available</Badge>
+                      <Badge variant={groupMembers.includes(emp.id) ? "default" : "outline"}>
+                        {groupMembers.includes(emp.id) ? "Member" : "Available"}
+                      </Badge>
                     </div>
                   ))}
                 </div>

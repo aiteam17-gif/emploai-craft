@@ -91,7 +91,7 @@ export const PriorityBoard = ({ userId }: PriorityBoardProps) => {
             ))}
           </div>
         ) : (
-          <ScrollArea className="h-[420px] pr-2">
+          <ScrollArea className="h-[320px] pr-2">
             <div className="space-y-3">
               {items.length === 0 && (
                 <div className="text-sm text-muted-foreground">No tasks</div>
