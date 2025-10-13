@@ -19,15 +19,44 @@ serve(async (req) => {
       });
     }
 
-    const { messages, model = "gpt-4o-mini", temperature = 0.7 } = await req.json();
+    const { messages, model = "gpt-4o-mini", temperature = 0.7, useStream = true } = await req.json();
     if (!Array.isArray(messages)) {
       return new Response(JSON.stringify({ error: "messages[] required" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    // Non-streaming path
+    if (!useStream) {
+      const upstream = await fetch("https://api.openai.com/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${OPENAI_API_KEY}`,
+        },
+        body: JSON.stringify({
+          model,
+          messages: messages as ChatMessage[],
+          temperature,
+          stream: false,
+        }),
+      });
 
-    // Stream from OpenAI and forward as SSE
+      const json = await upstream.json().catch(() => null);
+      if (!upstream.ok) {
+        return new Response(JSON.stringify({ error: "OpenAI error", detail: json }), {
+          status: upstream.status || 502,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const content = json?.choices?.[0]?.message?.content ?? "";
+      return new Response(JSON.stringify({ content }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Streaming path
     const upstream = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -45,7 +74,7 @@ serve(async (req) => {
     if (!upstream.ok || !upstream.body) {
       const text = await upstream.text().catch(() => "");
       return new Response(JSON.stringify({ error: "OpenAI error", detail: text }), {
-        status: 502,
+        status: upstream.status || 502,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -54,12 +83,10 @@ serve(async (req) => {
       async start(controller) {
         const encoder = new TextEncoder();
         const reader = upstream.body!.getReader();
-        // Initial hello
         controller.enqueue(encoder.encode(`event: hello\n` + `data: {"ok":true}\n\n`));
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
-          // OpenAI already streams in SSE lines; forward raw chunk as data
           controller.enqueue(value);
         }
         controller.close();

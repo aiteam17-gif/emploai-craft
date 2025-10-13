@@ -14,8 +14,9 @@ export async function callAI(params: {
       headers: {
         'Content-Type': 'application/json',
         Authorization: `Bearer ${authToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+        apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string
       },
-      body: JSON.stringify({ model: 'gpt-4o-mini', temperature: 0.7, messages }),
+      body: JSON.stringify({ model: 'gpt-4o-mini', temperature: 0.7, messages, useStream: false }),
       signal
     })
   }
@@ -26,6 +27,7 @@ export async function callAI(params: {
     headers: {
       'Content-Type': 'application/json',
       Authorization: `Bearer ${authToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+      apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string
     },
     body: JSON.stringify({ messages, expertise, memory }),
     signal

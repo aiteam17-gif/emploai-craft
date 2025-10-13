@@ -159,10 +159,9 @@ const Employee = () => {
       const aiProvider = ((session?.user?.user_metadata as any)?.aiProvider as string) || "gemini";
       const accessToken = (await supabase.auth.getSession()).data.session?.access_token || null;
       const response = await callAI({ provider: aiProvider as any, messages: chatMessages as any, expertise: employee.expertise, memory: memory.data || [], authToken: accessToken });
-      if (!response.ok || !response.body) throw new Error("Failed to get AI response");
+      if (!response.ok) throw new Error("Failed to get AI response");
 
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
+      const contentType = response.headers.get("content-type") || "";
       let assistantContent = "";
       let textBuffer = "";
 
@@ -172,41 +171,40 @@ const Employee = () => {
         { id: assistantMsgId, role: "assistant", content: "", created_at: new Date().toISOString() },
       ]);
 
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        textBuffer += decoder.decode(value, { stream: true });
-        let newlineIndex: number;
-
-        while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
-          let line = textBuffer.slice(0, newlineIndex);
-          textBuffer = textBuffer.slice(newlineIndex + 1);
-
-          if (line.endsWith("\r")) line = line.slice(0, -1);
-          if (line.startsWith(":") || line.trim() === "") continue;
-          if (!line.startsWith("data:")) continue; // accept both "data:" and "data: "
-
-          const jsonStr = line.slice(5).replace(/^data:\s*/, "").trim();
-          if (jsonStr === "[DONE]") break;
-
-          try {
-            const parsed = JSON.parse(jsonStr);
-            let content = parsed.choices?.[0]?.delta?.content;
-            if (!content && parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
-              content = parsed.candidates[0].content.parts[0].text;
+      if (contentType.includes("application/json")) {
+        const json = await response.json();
+        assistantContent = json.content || "";
+        setMessages((prev) => prev.map((m) => (m.id === assistantMsgId ? { ...m, content: assistantContent } : m)));
+      } else if (response.body) {
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          textBuffer += decoder.decode(value, { stream: true });
+          let newlineIndex: number;
+          while ((newlineIndex = textBuffer.indexOf("\n")) !== -1) {
+            let line = textBuffer.slice(0, newlineIndex);
+            textBuffer = textBuffer.slice(newlineIndex + 1);
+            if (line.endsWith("\r")) line = line.slice(0, -1);
+            if (line.startsWith(":") || line.trim() === "") continue;
+            if (!line.startsWith("data:")) continue;
+            const jsonStr = line.slice(5).replace(/^data:\s*/, "").trim();
+            if (jsonStr === "[DONE]") break;
+            try {
+              const parsed = JSON.parse(jsonStr);
+              let content = parsed.choices?.[0]?.delta?.content;
+              if (!content && parsed.candidates?.[0]?.content?.parts?.[0]?.text) {
+                content = parsed.candidates[0].content.parts[0].text;
+              }
+              if (content) {
+                assistantContent += content;
+                setMessages((prev) => prev.map((m) => (m.id === assistantMsgId ? { ...m, content: assistantContent } : m)));
+              }
+            } catch {
+              textBuffer = line + "\n" + textBuffer;
+              break;
             }
-            if (content) {
-              assistantContent += content;
-              setMessages((prev) =>
-                prev.map((m) =>
-                  m.id === assistantMsgId ? { ...m, content: assistantContent } : m
-                )
-              );
-            }
-          } catch {
-            textBuffer = line + "\n" + textBuffer;
-            break;
           }
         }
       }
