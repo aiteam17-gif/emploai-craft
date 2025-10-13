@@ -12,6 +12,7 @@ import { PriorityBoard } from "@/components/PriorityBoard";
 import { useSSE } from "@/hooks/use-sse";
 import { appendAudit } from "@/lib/audit";
 import { TaskHistory } from "@/components/TaskHistory";
+import { ManagerCard } from "@/components/ManagerCard";
 
 const Home = () => {
   const [user, setUser] = useState<any>(null);
@@ -133,6 +134,8 @@ const Home = () => {
             <span className="text-xs text-muted-foreground">Chat with AI employees</span>
           </Button>
         </div>
+
+        <ManagerCard userId={user.id} />
 
         <DashboardInsights userId={user.id} />
         <div className="grid lg:grid-cols-3 gap-6">
