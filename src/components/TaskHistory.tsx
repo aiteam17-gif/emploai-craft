@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Clock, CheckCircle2, AlertCircle, Plus } from "lucide-react";
+import { Clock, CheckCircle2, AlertCircle, Plus, Check } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
   Dialog,
@@ -49,6 +49,7 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
   const [employees, setEmployees] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [completingTasks, setCompletingTasks] = useState<Set<string>>(new Set());
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -150,6 +151,39 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
         suggested_employee_id: "",
       });
       fetchTasks();
+    }
+  };
+
+  const handleCompleteTask = async (taskId: string, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent navigation to employee page
+    setCompletingTasks(prev => new Set(prev).add(taskId));
+    
+    const { error } = await supabase
+      .from("tasks")
+      .update({ 
+        status: "completed",
+        completed_at: new Date().toISOString()
+      })
+      .eq("id", taskId);
+
+    setCompletingTasks(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(taskId);
+      return newSet;
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to complete task",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Task completed",
+        description: "Task marked as complete",
+      });
+      fetchTasks(); // Refresh the list
     }
   };
 
@@ -287,7 +321,7 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
                   }}
                 >
                   <div className="flex items-start justify-between mb-2">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-1">
                       {getStatusIcon(task.status)}
                       <h4 className="font-medium">{task.title}</h4>
                     </div>
@@ -296,6 +330,17 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
                         {task.priority}
                       </span>
                       {getStatusBadge(task.status)}
+                      {task.status === "pending" && (
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-7 w-7 p-0"
+                          onClick={(e) => handleCompleteTask(task.id, e)}
+                          disabled={completingTasks.has(task.id)}
+                        >
+                          <Check className={`h-4 w-4 ${completingTasks.has(task.id) ? 'animate-spin' : ''}`} />
+                        </Button>
+                      )}
                     </div>
                   </div>
                   {task.description && (

@@ -6,6 +6,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
+import { CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 type Priority = "P1" | "P2" | "P3" | null;
 
@@ -30,15 +33,50 @@ const priorityOrder: Record<string, number> = { P1: 0, P2: 1, P3: 2 };
 export const PriorityBoard = ({ userId }: PriorityBoardProps) => {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
+  const [completingTasks, setCompletingTasks] = useState<Set<string>>(new Set());
+  const { toast } = useToast();
 
   const fetchTasks = async () => {
     const { data, error } = await supabase
       .from("tasks")
       .select("id,title,description,priority,status,created_at,updated_at,assigned_employee_id,created_by")
       .eq("created_by", userId)
+      .eq("status", "pending") // Only show pending tasks on the board
       .order("created_at", { ascending: false });
     if (!error) setTasks(data || []);
     setLoading(false);
+  };
+
+  const handleCompleteTask = async (taskId: string) => {
+    setCompletingTasks(prev => new Set(prev).add(taskId));
+    
+    const { error } = await supabase
+      .from("tasks")
+      .update({ 
+        status: "completed",
+        completed_at: new Date().toISOString()
+      })
+      .eq("id", taskId);
+
+    setCompletingTasks(prev => {
+      const newSet = new Set(prev);
+      newSet.delete(taskId);
+      return newSet;
+    });
+
+    if (error) {
+      toast({
+        title: "Error",
+        description: "Failed to complete task",
+        variant: "destructive",
+      });
+    } else {
+      toast({
+        title: "Task completed",
+        description: "Task marked as complete",
+      });
+      fetchTasks(); // Refresh the list
+    }
   };
 
   useEffect(() => {
@@ -107,7 +145,7 @@ export const PriorityBoard = ({ userId }: PriorityBoardProps) => {
               {items.map((t) => (
                 <div key={t.id} className="rounded-lg border p-3 hover:bg-muted/50 transition-colors">
                   <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
+                    <div className="min-w-0 flex-1">
                       <div className="font-medium truncate" title={t.title}>{t.title}</div>
                       {t.description && (
                         <div className="text-sm text-muted-foreground line-clamp-2">{t.description}</div>
@@ -118,10 +156,21 @@ export const PriorityBoard = ({ userId }: PriorityBoardProps) => {
                       <TooltipProvider>
                         <Tooltip>
                           <TooltipTrigger asChild>
-                            <Badge variant="outline" className="text-xs">{t.status}</Badge>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 px-2"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCompleteTask(t.id);
+                              }}
+                              disabled={completingTasks.has(t.id)}
+                            >
+                              <CheckCircle2 className={`h-4 w-4 ${completingTasks.has(t.id) ? 'animate-spin' : ''}`} />
+                            </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <div className="text-xs">Updated {new Date(t.updated_at).toLocaleString()}</div>
+                            <div className="text-xs">Mark as complete</div>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>
