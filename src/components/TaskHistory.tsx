@@ -55,7 +55,7 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-    priority: "medium",
+    priority: "P2",
     assigned_employee_id: "",
     suggested_employee_id: "",
   });
@@ -97,24 +97,26 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
     }
   };
 
-  // Improve suggested agent scoring: match expertise tags to title + description keywords
+  // Improve suggested agent scoring: match expertise tags to title + description keywords + priority
   useEffect(() => {
     if (!employees || employees.length === 0) return;
     const titleLower = formData.title.toLowerCase();
     const descLower = (formData.description || "").toLowerCase();
+    const priorityWeight = formData.priority === "P1" ? 1.5 : formData.priority === "P2" ? 1.2 : 1.0;
+    
     const scoreFor = (expertise: string) => {
       const ex = String(expertise).toLowerCase();
       let score = 0;
       if (titleLower.includes(ex)) score += 2;
       if (descLower.includes(ex)) score += 1;
-      return score;
+      return score * priorityWeight;
     };
     const ranked = [...employees].map((e: any) => ({ id: e.id, score: scoreFor(e.expertise) }));
     ranked.sort((a, b) => b.score - a.score);
     if (ranked[0] && ranked[0].score > 0) {
       setFormData((s) => ({ ...s, suggested_employee_id: ranked[0].id }));
     }
-  }, [employees, formData.title, formData.description]);
+  }, [employees, formData.title, formData.description, formData.priority]);
 
   const handleCreateTask = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,7 +145,7 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
       setFormData({
         title: "",
         description: "",
-        priority: "medium",
+        priority: "P2",
         assigned_employee_id: "",
         suggested_employee_id: "",
       });
@@ -173,6 +175,9 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
 
   const getPriorityColor = (priority: string) => {
     const colors: Record<string, string> = {
+      P1: "text-red-500",
+      P2: "text-yellow-500",
+      P3: "text-green-500",
       high: "text-red-500",
       medium: "text-yellow-500",
       low: "text-green-500",
@@ -229,9 +234,9 @@ export const TaskHistory = ({ userId }: TaskHistoryProps) => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="P3">P3 - Low</SelectItem>
+                      <SelectItem value="P2">P2 - Medium</SelectItem>
+                      <SelectItem value="P1">P1 - High</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
