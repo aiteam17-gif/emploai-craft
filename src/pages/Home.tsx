@@ -2,24 +2,38 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
+import { UserMenu } from "@/components/UserMenu";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Plus, LogOut, Briefcase } from "lucide-react";
 import { EmployeeGrid } from "@/components/EmployeeGrid";
 import { CreateEmployeeDialog } from "@/components/CreateEmployeeDialog";
 import { DashboardInsights } from "@/components/DashboardInsights";
+import { PriorityBoard } from "@/components/PriorityBoard";
+import { useSSE } from "@/hooks/use-sse";
+import { appendAudit } from "@/lib/audit";
 import { TaskHistory } from "@/components/TaskHistory";
 
 const Home = () => {
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [role, setRole] = useState<string>("user");
   const navigate = useNavigate();
   const { toast } = useToast();
+  useSSE(`${import.meta.env.VITE_SUPABASE_URL}/functions/v1/events?userId=${user?.id ?? ""}`,(type)=>{
+    if(type==="hello") return;
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    appendAudit({ actorId: user.id, entityType: "page", entityId: "home", action: "view" });
+  }, [user]);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         setUser(session?.user ?? null);
+        setRole((session?.user?.user_metadata as any)?.role || "user");
         if (!session) {
           navigate("/auth");
         }
@@ -28,6 +42,7 @@ const Home = () => {
 
     supabase.auth.getSession().then(({ data: { session } }) => {
       setUser(session?.user ?? null);
+      setRole((session?.user?.user_metadata as any)?.role || "user");
       if (!session) {
         navigate("/auth");
       } else {
@@ -76,18 +91,21 @@ const Home = () => {
               <Plus className="mr-2 h-4 w-4" />
               New Employee
             </Button>
-            <Button onClick={handleSignOut} variant="ghost" size="sm">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            {(role === "supervisor" || role === "admin") && (
+              <Button onClick={() => navigate("/supervisor")} variant="outline" size="sm">
+                Supervisor
+              </Button>
+            )}
+            <UserMenu />
           </div>
         </div>
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
         <DashboardInsights userId={user.id} />
-        
         <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-6">
+            <PriorityBoard userId={user.id} />
             <EmployeeGrid userId={user.id} onCreateClick={() => setCreateDialogOpen(true)} />
           </div>
           <div className="lg:col-span-1">
