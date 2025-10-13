@@ -72,13 +72,10 @@ const Landing = () => {
             each employee is expertly trained and ready to help you scale.
           </p>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+          <div className="flex justify-center pt-4">
             <Button size="lg" onClick={() => navigate("/auth")} className="text-lg px-8 py-6">
               Start Building Your Team
               <ArrowRight className="ml-2 h-5 w-5" />
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 py-6">
-              Watch Demo
             </Button>
           </div>
         </div>
