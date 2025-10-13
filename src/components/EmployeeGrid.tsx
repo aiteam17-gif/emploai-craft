@@ -14,6 +14,8 @@ interface Employee {
   avatar_url: string | null;
   created_at: string;
   updated_at: string;
+  level: "junior" | "senior";
+  role: "employee" | "manager";
 }
 
 interface EmployeeGridProps {

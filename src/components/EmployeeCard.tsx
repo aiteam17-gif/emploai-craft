@@ -7,7 +7,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
-import { MoreVertical, MessageSquare, Trash2 } from "lucide-react";
+import { MoreVertical, MessageSquare, Trash2, Crown, Briefcase } from "lucide-react";
+import { Badge } from "./ui/badge";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +27,8 @@ interface Employee {
   expertise: string;
   avatar_url: string | null;
   updated_at: string;
+  level: "junior" | "senior";
+  role: "employee" | "manager";
 }
 
 interface EmployeeCardProps {
@@ -56,9 +59,23 @@ export const EmployeeCard = ({ employee, onDelete }: EmployeeCardProps) => {
             className="h-10 w-10 rounded-full border object-cover flex-shrink-0"
           />
           <div className="min-w-0 flex-1">
-            <div className="font-medium truncate">{employee.name}</div>
+            <div className="flex items-center gap-2">
+              <div className="font-medium truncate">{employee.name}</div>
+              {employee.role === "manager" && (
+                <Crown className="h-4 w-4 text-yellow-500 flex-shrink-0" />
+              )}
+            </div>
             <div className="text-sm text-muted-foreground truncate">
               {employee.expertise} • {getGenderLabel(employee.gender)}
+            </div>
+            <div className="flex gap-1 mt-1 flex-wrap">
+              <Badge variant="secondary" className="capitalize text-xs px-1.5 py-0">
+                <Briefcase className="h-3 w-3 mr-1" />
+                {employee.level}
+              </Badge>
+              {employee.role === "manager" && (
+                <Badge variant="default" className="text-xs px-1.5 py-0">Manager</Badge>
+              )}
             </div>
           </div>
         </div>

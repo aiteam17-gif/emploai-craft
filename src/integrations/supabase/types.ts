@@ -89,7 +89,9 @@ export type Database = {
           expertise: Database["public"]["Enums"]["expertise_type"]
           gender: Database["public"]["Enums"]["gender_type"]
           id: string
+          level: Database["public"]["Enums"]["employee_level"]
           name: string
+          role: Database["public"]["Enums"]["employee_role"]
           updated_at: string
           user_id: string
         }
@@ -100,7 +102,9 @@ export type Database = {
           expertise: Database["public"]["Enums"]["expertise_type"]
           gender?: Database["public"]["Enums"]["gender_type"]
           id?: string
+          level?: Database["public"]["Enums"]["employee_level"]
           name: string
+          role?: Database["public"]["Enums"]["employee_role"]
           updated_at?: string
           user_id: string
         }
@@ -111,7 +115,9 @@ export type Database = {
           expertise?: Database["public"]["Enums"]["expertise_type"]
           gender?: Database["public"]["Enums"]["gender_type"]
           id?: string
+          level?: Database["public"]["Enums"]["employee_level"]
           name?: string
+          role?: Database["public"]["Enums"]["employee_role"]
           updated_at?: string
           user_id?: string
         }
@@ -302,6 +308,8 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
+      employee_level: "junior" | "senior"
+      employee_role: "employee" | "manager"
       expertise_type:
         | "HR"
         | "Marketing & Design"
@@ -437,6 +445,8 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      employee_level: ["junior", "senior"],
+      employee_role: ["employee", "manager"],
       expertise_type: [
         "HR",
         "Marketing & Design",

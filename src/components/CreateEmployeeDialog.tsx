@@ -35,6 +35,16 @@ const GENDER_OPTIONS = [
   { value: "neutral", label: "Neutral" },
 ];
 
+const LEVEL_OPTIONS = [
+  { value: "junior", label: "Junior" },
+  { value: "senior", label: "Senior" },
+];
+
+const ROLE_OPTIONS = [
+  { value: "employee", label: "Employee" },
+  { value: "manager", label: "Manager" },
+];
+
 const generateAvatarUrl = (name: string, expertise: string): string => {
   const seed = encodeURIComponent(`${name}-${expertise}`);
   return `https://api.dicebear.com/9.x/thumbs/svg?seed=${seed}&radius=50`;
@@ -50,6 +60,8 @@ export const CreateEmployeeDialog = ({ open, onOpenChange, userId }: CreateEmplo
   const [name, setName] = useState("");
   const [gender, setGender] = useState<string>("");
   const [expertise, setExpertise] = useState<string>("");
+  const [level, setLevel] = useState<"junior" | "senior">("junior");
+  const [role, setRole] = useState<"employee" | "manager">("employee");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
 
@@ -72,6 +84,8 @@ export const CreateEmployeeDialog = ({ open, onOpenChange, userId }: CreateEmplo
         name: name.trim(),
         gender: gender as "male" | "female" | "neutral",
         expertise: expertise as "HR" | "Marketing & Design" | "Technology" | "Finance" | "GTM & Market Analysis" | "Report Polishing",
+        level,
+        role,
         avatar_url: avatarUrl,
       });
 
@@ -85,6 +99,8 @@ export const CreateEmployeeDialog = ({ open, onOpenChange, userId }: CreateEmplo
       setName("");
       setGender("");
       setExpertise("");
+      setLevel("junior");
+      setRole("employee");
       onOpenChange(false);
       window.location.reload();
     } catch (error: any) {
@@ -143,6 +159,36 @@ export const CreateEmployeeDialog = ({ open, onOpenChange, userId }: CreateEmplo
                 {EXPERTISE_OPTIONS.map((option) => (
                   <SelectItem key={option} value={option}>
                     {option}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="level">Level</Label>
+            <Select value={level} onValueChange={(value: "junior" | "senior") => setLevel(value)} disabled={loading}>
+              <SelectTrigger id="level">
+                <SelectValue placeholder="Select level" />
+              </SelectTrigger>
+              <SelectContent>
+                {LEVEL_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="role">Role</Label>
+            <Select value={role} onValueChange={(value: "employee" | "manager") => setRole(value)} disabled={loading}>
+              <SelectTrigger id="role">
+                <SelectValue placeholder="Select role" />
+              </SelectTrigger>
+              <SelectContent>
+                {ROLE_OPTIONS.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
                   </SelectItem>
                 ))}
               </SelectContent>
