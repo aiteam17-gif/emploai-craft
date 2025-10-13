@@ -1,3 +1,4 @@
+import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
 const corsHeaders = {
@@ -31,43 +32,33 @@ serve(async (req) => {
       throw new Error("Messages array is required");
     }
 
-    const GOOGLE_API_KEY = Deno.env.get("GOOGLE_API_KEY");
-    if (!GOOGLE_API_KEY) {
-      throw new Error("GOOGLE_API_KEY is not configured");
+    const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not configured");
     }
 
     // Get system prompt based on expertise
-    const systemPrompt = EXPERTISE_PROMPTS[expertise as keyof typeof EXPERTISE_PROMPTS] || EXPERTISE_PROMPTS["Technology"];
+    let systemPrompt = EXPERTISE_PROMPTS[expertise as keyof typeof EXPERTISE_PROMPTS] || EXPERTISE_PROMPTS["Technology"];
     
     // Add memory context if available
-    let contextualPrompt = systemPrompt;
     if (memory && memory.length > 0) {
       const memoryContext = memory.map((m: { factlet: string }) => m.factlet).join(", ");
-      contextualPrompt += `\n\nContext from previous interactions: ${memoryContext}`;
+      systemPrompt += `\n\nContext from previous interactions: ${memoryContext}`;
     }
 
-    // Convert messages to Gemini format
-    const geminiMessages = messages.map((msg: { role: string; content: string }) => ({
-      role: msg.role === "assistant" ? "model" : "user",
-      parts: [{ text: msg.content }]
-    }));
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent?key=${GOOGLE_API_KEY}`, {
-      method: "POST",
+    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Authorization': `Bearer ${OPENAI_API_KEY}`,
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        contents: geminiMessages,
-        systemInstruction: {
-          parts: [{ text: contextualPrompt }]
-        },
-        generationConfig: {
-          temperature: 0.7,
-          topK: 40,
-          topP: 0.95,
-          maxOutputTokens: 8192,
-        }
+        model: 'gpt-5-mini-2025-08-07',
+        messages: [
+          { role: 'system', content: systemPrompt },
+          ...messages
+        ],
+        stream: true,
       }),
     });
 
