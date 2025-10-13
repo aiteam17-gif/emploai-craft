@@ -157,7 +157,8 @@ const Employee = () => {
       // read aiProvider from user metadata
       const session = (await supabase.auth.getSession()).data.session;
       const aiProvider = ((session?.user?.user_metadata as any)?.aiProvider as string) || "gemini";
-      const response = await callAI({ provider: aiProvider as any, messages: chatMessages as any, expertise: employee.expertise, memory: memory.data || [] });
+      const accessToken = (await supabase.auth.getSession()).data.session?.access_token || null;
+      const response = await callAI({ provider: aiProvider as any, messages: chatMessages as any, expertise: employee.expertise, memory: memory.data || [], authToken: accessToken });
       if (!response.ok || !response.body) throw new Error("Failed to get AI response");
 
       const reader = response.body.getReader();
