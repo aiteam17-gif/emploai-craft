@@ -237,12 +237,22 @@ const Employee = () => {
         },
       ]);
 
+      // Fetch memory from ALL employees of this user, not just the current one
       const memory = await supabase
         .from("employee_memory")
-        .select("factlet")
-        .eq("employee_id", id)
+        .select(`
+          factlet,
+          employees!inner(name, user_id)
+        `)
+        .eq("employees.user_id", userId)
         .order("importance_score", { ascending: false })
-        .limit(8);
+        .limit(30);
+      
+      // Add employee name to each memory item
+      const enrichedMemory = (memory.data || []).map((m: any) => ({
+        factlet: m.factlet,
+        employee_name: m.employees.name
+      }));
 
       let fileContext = "";
       if (uploadedFiles.length > 0) {
@@ -259,7 +269,7 @@ const Employee = () => {
       // read aiProvider from user metadata
       const aiProvider = ((session.data.session?.user?.user_metadata as any)?.aiProvider as string) || "gemini";
       const accessToken = session.data.session?.access_token || null;
-      const response = await callAI({ provider: aiProvider as any, messages: chatMessages as any, expertise: employee.expertise, memory: memory.data || [], authToken: accessToken });
+      const response = await callAI({ provider: aiProvider as any, messages: chatMessages as any, expertise: employee.expertise, memory: enrichedMemory || [], authToken: accessToken });
       if (!response.ok) throw new Error("Failed to get AI response");
 
       const contentType = response.headers.get("content-type") || "";

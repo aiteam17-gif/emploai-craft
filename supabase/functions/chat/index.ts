@@ -323,10 +323,12 @@ serve(async (req) => {
     let systemPrompt =
       EXPERTISE_PROMPTS[expertise as keyof typeof EXPERTISE_PROMPTS] || EXPERTISE_PROMPTS["Technology"];
 
-    // Add memory context if available
+    // Add memory context if available - now includes all employees' knowledge
     if (memory && memory.length > 0) {
-      const memoryContext = memory.map((m: { factlet: string }) => m.factlet).join(", ");
-      systemPrompt += `\n\nContext from previous interactions: ${memoryContext}`;
+      const memoryContext = memory.map((m: { factlet: string; employee_name?: string }) => 
+        m.employee_name ? `[${m.employee_name}]: ${m.factlet}` : m.factlet
+      ).join("\n");
+      systemPrompt += `\n\nShared Knowledge Base (from all team members):\n${memoryContext}\n\nYou can reference information learned by other employees to provide comprehensive answers.`;
     }
 
     // Check if we should use image generation model
