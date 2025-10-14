@@ -26,6 +26,7 @@ interface Message {
   role: string;
   content: string;
   timestamp: string;
+  images?: string[];
 }
 
 const AIMessaging = () => {
@@ -117,6 +118,8 @@ const AIMessaging = () => {
       setMessages((prev) => [...prev, assistantMsg]);
 
       if (reader) {
+        let imageUrls: string[] = [];
+        
         while (true) {
           const { done, value } = await reader.read();
           if (done) break;
@@ -132,12 +135,26 @@ const AIMessaging = () => {
               try {
                 const parsed = JSON.parse(data);
                 const content = parsed.choices?.[0]?.delta?.content;
+                const images = parsed.choices?.[0]?.message?.images;
+                
                 if (content) {
                   assistantMessage += content;
                   setMessages((prev) =>
                     prev.map((m) =>
                       m.id === assistantMsg.id
-                        ? { ...m, content: assistantMessage }
+                        ? { ...m, content: assistantMessage, images: imageUrls.length > 0 ? imageUrls : undefined }
+                        : m
+                    )
+                  );
+                }
+                
+                // Handle images in the response
+                if (images && Array.isArray(images)) {
+                  imageUrls = images.map((img: any) => img.image_url?.url).filter(Boolean);
+                  setMessages((prev) =>
+                    prev.map((m) =>
+                      m.id === assistantMsg.id
+                        ? { ...m, content: assistantMessage, images: imageUrls }
                         : m
                     )
                   );
@@ -298,6 +315,18 @@ const AIMessaging = () => {
                             }`}
                           >
                             <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                            {msg.images && msg.images.length > 0 && (
+                              <div className="mt-2 space-y-2">
+                                {msg.images.map((img, idx) => (
+                                  <img 
+                                    key={idx} 
+                                    src={img} 
+                                    alt={`Generated image ${idx + 1}`}
+                                    className="rounded-md max-w-full h-auto"
+                                  />
+                                ))}
+                              </div>
+                            )}
                           </div>
                         </div>
                       ))

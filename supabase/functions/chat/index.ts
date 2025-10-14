@@ -75,7 +75,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, expertise, memory } = await req.json();
+    const { messages, expertise, memory, generateImage } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Messages array is required");
@@ -96,17 +96,33 @@ serve(async (req) => {
       systemPrompt += `\n\nContext from previous interactions: ${memoryContext}`;
     }
 
+    // Check if we should use image generation model
+    const shouldGenerateImages = generateImage || 
+      messages.some((m: any) => 
+        typeof m.content === 'string' && 
+        (m.content.toLowerCase().includes('generate image') || 
+         m.content.toLowerCase().includes('create image') ||
+         m.content.toLowerCase().includes('show me'))
+      );
+
+    const requestBody: any = {
+      model: shouldGenerateImages ? "google/gemini-2.5-flash-image-preview" : "google/gemini-2.5-flash",
+      messages: [{ role: "system", content: systemPrompt }, ...messages],
+      stream: true,
+    };
+
+    // Add modalities for image generation
+    if (shouldGenerateImages) {
+      requestBody.modalities = ["image", "text"];
+    }
+
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",
       headers: {
         Authorization: `Bearer ${LOVABLE_API_KEY}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        messages: [{ role: "system", content: systemPrompt }, ...messages],
-        stream: true,
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
