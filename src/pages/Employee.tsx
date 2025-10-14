@@ -280,14 +280,14 @@ const Employee = () => {
         </div>
       </ScrollArea>
 
-      <div className="border-t p-4">
+      <div className="sticky bottom-0 border-t bg-background p-4">
         <div className="max-w-3xl mx-auto flex gap-2">
           <Input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
+            onKeyPress={(e) => {
+              if (e.key === "Enter") {
                 e.preventDefault();
                 handleSend();
               }
