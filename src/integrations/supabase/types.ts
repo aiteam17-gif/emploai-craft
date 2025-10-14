@@ -14,6 +14,39 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_attachments: {
+        Row: {
+          content_type: string
+          conversation_id: string
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id: string
+          uploaded_by: string
+        }
+        Insert: {
+          content_type: string
+          conversation_id: string
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size: number
+          id?: string
+          uploaded_by: string
+        }
+        Update: {
+          content_type?: string
+          conversation_id?: string
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number
+          id?: string
+          uploaded_by?: string
+        }
+        Relationships: []
+      }
       conversations: {
         Row: {
           created_at: string
