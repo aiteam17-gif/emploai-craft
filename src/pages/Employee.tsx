@@ -257,7 +257,7 @@ const Employee = () => {
       // Fetch all employees for context about the organization
       const { data: allEmployees } = await supabase
         .from("employees")
-        .select("name, expertise, level, role")
+        .select("name, expertise, level, role, offer_letter_url")
         .eq("user_id", userId)
         .is("deleted_at", null);
 
@@ -265,8 +265,23 @@ const Employee = () => {
         name: emp.name,
         expertise: emp.expertise,
         level: emp.level,
-        role: emp.role
+        role: emp.role,
+        has_offer_letter: !!emp.offer_letter_url,
+        offer_letter_url: emp.offer_letter_url
       }));
+
+      // Add current employee's offer letter status to the message
+      const currentEmployeeData = allEmployees?.find(emp => emp.name === employee.name);
+      let offerLetterContext = "";
+      if (currentEmployeeData?.offer_letter_url) {
+        const { data: signedUrl } = await supabase.storage
+          .from('offer-letters')
+          .createSignedUrl(currentEmployeeData.offer_letter_url, 3600);
+        
+        if (signedUrl?.signedUrl) {
+          offerLetterContext = `\n\n[Note: You have an offer letter on file. Download link: ${signedUrl.signedUrl}]`;
+        }
+      }
 
       let fileContext = "";
       if (uploadedFiles.length > 0) {
@@ -275,7 +290,7 @@ const Employee = () => {
         ).join(', ')}]\n\nAcknowledge these files and note that you can refer to them in future conversations.`;
       }
 
-      const chatMessages = [...messages, { role: "user", content: userMessage + fileContext }].map((m) => ({
+      const chatMessages = [...messages, { role: "user", content: userMessage + fileContext + offerLetterContext }].map((m) => ({
         role: m.role,
         content: m.content,
       }));

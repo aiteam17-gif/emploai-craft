@@ -301,10 +301,11 @@ serve(async (req) => {
 
     // Add employee organization context
     if (employees && employees.length > 0) {
-      const employeeList = employees.map((emp: { name: string; expertise: string; level: string; role: string }) => 
-        `${emp.name} - ${emp.expertise} (${emp.level} ${emp.role})`
-      ).join("\n");
-      systemPrompt += `\n\nYour Organization:\nYou work in an organization with ${employees.length} team members. Here is your complete team:\n\n${employeeList}\n\nIMPORTANT: You all work together as colleagues in the same organization. When users ask about specific departments or need help from another area (like HR, Finance, Marketing, etc.), you should reference your colleagues by name. For example, if someone asks about HR matters, you can say "You should reach out to [HR colleague name] who handles all HR functions" or "Let me connect you with [colleague name] from [their department]". You have full knowledge of what each colleague does and can guide users to the right person.`;
+      const employeeList = employees.map((emp: { name: string; expertise: string; level: string; role: string; has_offer_letter?: boolean }) => {
+        const offerStatus = emp.has_offer_letter ? " [Has offer letter on file]" : " [No offer letter yet]";
+        return `${emp.name} - ${emp.expertise} (${emp.level} ${emp.role})${offerStatus}`;
+      }).join("\n");
+      systemPrompt += `\n\nYour Organization:\nYou work in an organization with ${employees.length} team members. Here is your complete team:\n\n${employeeList}\n\nIMPORTANT: You all work together as colleagues in the same organization. When users ask about specific departments or need help from another area (like HR, Finance, Marketing, etc.), you should reference your colleagues by name. For example, if someone asks about HR matters, you can say "You should reach out to [HR colleague name] who handles all HR functions" or "Let me connect you with [colleague name] from [their department]". You have full knowledge of what each colleague does and can guide users to the right person.\n\nWhen users ask about their offer letter, check if they have one on file. If they do and a download link is provided in the user's message, share it with them. If they don't have one, let them know they should contact the HR team member to request it.`;
     }
 
     // Add memory context if available - now includes all employees' knowledge
