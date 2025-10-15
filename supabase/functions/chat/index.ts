@@ -280,7 +280,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, expertise, memory, generateImage } = await req.json();
+    const { messages, expertise, memory, employees, generateImage } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Messages array is required");
@@ -294,6 +294,14 @@ serve(async (req) => {
     // Get system prompt based on expertise
     let systemPrompt =
       EXPERTISE_PROMPTS[expertise as keyof typeof EXPERTISE_PROMPTS] || EXPERTISE_PROMPTS["Technology"];
+
+    // Add employee organization context
+    if (employees && employees.length > 0) {
+      const employeeList = employees.map((emp: { name: string; expertise: string; level: string; role: string }) => 
+        `${emp.name} - ${emp.expertise} (${emp.level} ${emp.role})`
+      ).join("\n");
+      systemPrompt += `\n\nYour Organization Team:\n${employeeList}\n\nYou work alongside these colleagues. You can refer to them by name when relevant, and you know their areas of expertise. When users ask about getting help from specific departments or roles, reference the appropriate team member by name.`;
+    }
 
     // Add memory context if available - now includes all employees' knowledge
     if (memory && memory.length > 0) {

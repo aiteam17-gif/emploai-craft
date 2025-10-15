@@ -254,6 +254,20 @@ const Employee = () => {
         employee_name: m.employees.name
       }));
 
+      // Fetch all employees for context about the organization
+      const { data: allEmployees } = await supabase
+        .from("employees")
+        .select("name, expertise, level, role")
+        .eq("user_id", userId)
+        .is("deleted_at", null);
+
+      const employeeContext = (allEmployees || []).map(emp => ({
+        name: emp.name,
+        expertise: emp.expertise,
+        level: emp.level,
+        role: emp.role
+      }));
+
       let fileContext = "";
       if (uploadedFiles.length > 0) {
         fileContext = `\n\n[User attached ${uploadedFiles.length} file(s): ${uploadedFiles.map(f => 
@@ -269,7 +283,14 @@ const Employee = () => {
       // read aiProvider from user metadata
       const aiProvider = ((session.data.session?.user?.user_metadata as any)?.aiProvider as string) || "gemini";
       const accessToken = session.data.session?.access_token || null;
-      const response = await callAI({ provider: aiProvider as any, messages: chatMessages as any, expertise: employee.expertise, memory: enrichedMemory || [], authToken: accessToken });
+      const response = await callAI({ 
+        provider: aiProvider as any, 
+        messages: chatMessages as any, 
+        expertise: employee.expertise, 
+        memory: enrichedMemory || [], 
+        employees: employeeContext || [],
+        authToken: accessToken 
+      });
       if (!response.ok) throw new Error("Failed to get AI response");
 
       const contentType = response.headers.get("content-type") || "";
