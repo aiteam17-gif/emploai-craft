@@ -270,6 +270,13 @@ const Employee = () => {
         offer_letter_url: emp.offer_letter_url
       }));
 
+      // Fetch company information
+      const { data: companyData } = await supabase
+        .from("company_info")
+        .select("*")
+        .eq("user_id", userId)
+        .maybeSingle();
+
       // Add current employee's offer letter status to the message
       const currentEmployeeData = allEmployees?.find(emp => emp.name === employee.name);
       let offerLetterContext = "";
@@ -304,6 +311,7 @@ const Employee = () => {
         expertise: employee.expertise, 
         memory: enrichedMemory || [], 
         employees: employeeContext || [],
+        companyInfo: companyData || null,
         authToken: accessToken 
       });
       if (!response.ok) throw new Error("Failed to get AI response");

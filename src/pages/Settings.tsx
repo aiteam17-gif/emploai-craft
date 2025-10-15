@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Building2, ChevronRight } from "lucide-react";
 
 const Settings = () => {
+  const navigate = useNavigate();
   const [role, setRole] = useState("user");
   const [aiProvider, setAiProvider] = useState("gemini");
   const [email, setEmail] = useState("");
@@ -28,10 +31,29 @@ const Settings = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8 max-w-3xl">
+    <div className="container mx-auto px-4 py-8 max-w-3xl space-y-6">
       <Card>
         <CardHeader>
-          <CardTitle>Settings</CardTitle>
+          <CardTitle>Company Settings</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Button
+            variant="outline"
+            className="w-full justify-between"
+            onClick={() => navigate("/company-settings")}
+          >
+            <div className="flex items-center gap-2">
+              <Building2 className="h-4 w-4" />
+              <span>Company Information</span>
+            </div>
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>User Settings</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="text-sm text-muted-foreground">{email}</div>

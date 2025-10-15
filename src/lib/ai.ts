@@ -4,10 +4,11 @@ export async function callAI(params: {
   expertise?: string
   memory?: any[]
   employees?: any[]
+  companyInfo?: any
   authToken?: string | null
   signal?: AbortSignal
 }) {
-  const { provider, messages, expertise = 'Technology', memory = [], employees = [], authToken, signal } = params
+  const { provider, messages, expertise = 'Technology', memory = [], employees = [], companyInfo = null, authToken, signal } = params
   if (provider === 'openai') {
     const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/openai`
     return fetch(url, {
@@ -30,7 +31,7 @@ export async function callAI(params: {
       Authorization: `Bearer ${authToken || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
       apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string
     },
-    body: JSON.stringify({ messages, expertise, memory, employees }),
+    body: JSON.stringify({ messages, expertise, memory, employees, companyInfo }),
     signal
   })
 }

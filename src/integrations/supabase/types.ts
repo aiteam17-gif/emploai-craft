@@ -14,6 +14,66 @@ export type Database = {
   }
   public: {
     Tables: {
+      company_info: {
+        Row: {
+          additional_info: Json | null
+          benefits: string | null
+          company_name: string | null
+          company_size: string | null
+          created_at: string
+          culture: string | null
+          founded_year: number | null
+          headquarters: string | null
+          id: string
+          industry: string | null
+          mission: string | null
+          policies: string | null
+          products_services: string | null
+          updated_at: string
+          user_id: string
+          values: string | null
+          vision: string | null
+        }
+        Insert: {
+          additional_info?: Json | null
+          benefits?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          created_at?: string
+          culture?: string | null
+          founded_year?: number | null
+          headquarters?: string | null
+          id?: string
+          industry?: string | null
+          mission?: string | null
+          policies?: string | null
+          products_services?: string | null
+          updated_at?: string
+          user_id: string
+          values?: string | null
+          vision?: string | null
+        }
+        Update: {
+          additional_info?: Json | null
+          benefits?: string | null
+          company_name?: string | null
+          company_size?: string | null
+          created_at?: string
+          culture?: string | null
+          founded_year?: number | null
+          headquarters?: string | null
+          id?: string
+          industry?: string | null
+          mission?: string | null
+          policies?: string | null
+          products_services?: string | null
+          updated_at?: string
+          user_id?: string
+          values?: string | null
+          vision?: string | null
+        }
+        Relationships: []
+      }
       conversation_attachments: {
         Row: {
           content_type: string

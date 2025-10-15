@@ -295,7 +295,7 @@ serve(async (req) => {
   }
 
   try {
-    const { messages, expertise, memory, employees, generateImage } = await req.json();
+    const { messages, expertise, memory, employees, companyInfo, generateImage } = await req.json();
 
     if (!messages || !Array.isArray(messages)) {
       throw new Error("Messages array is required");
@@ -309,6 +309,24 @@ serve(async (req) => {
     // Get system prompt based on expertise
     let systemPrompt =
       EXPERTISE_PROMPTS[expertise as keyof typeof EXPERTISE_PROMPTS] || EXPERTISE_PROMPTS["Technology"];
+
+    // Add company information context
+    if (companyInfo) {
+      const companyDetails = [];
+      if (companyInfo.company_name) companyDetails.push(`Company: ${companyInfo.company_name}`);
+      if (companyInfo.industry) companyDetails.push(`Industry: ${companyInfo.industry}`);
+      if (companyInfo.mission) companyDetails.push(`Mission: ${companyInfo.mission}`);
+      if (companyInfo.vision) companyDetails.push(`Vision: ${companyInfo.vision}`);
+      if (companyInfo.values) companyDetails.push(`Core Values: ${companyInfo.values}`);
+      if (companyInfo.culture) companyDetails.push(`Culture: ${companyInfo.culture}`);
+      if (companyInfo.benefits) companyDetails.push(`Benefits: ${companyInfo.benefits}`);
+      if (companyInfo.products_services) companyDetails.push(`Products/Services: ${companyInfo.products_services}`);
+      if (companyInfo.policies) companyDetails.push(`Policies: ${companyInfo.policies}`);
+      
+      if (companyDetails.length > 0) {
+        systemPrompt += `\n\nCompany Information:\n${companyDetails.join("\n")}\n\nUse this company information to provide context-aware responses. When employees ask about the company, policies, benefits, or culture, reference this information.`;
+      }
+    }
 
     // Add employee organization context
     if (employees && employees.length > 0) {

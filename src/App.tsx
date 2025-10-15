@@ -10,6 +10,7 @@ import NotFound from "./pages/NotFound";
 import Landing from "./pages/Landing";
 import Supervisor from "./pages/Supervisor";
 import Settings from "./pages/Settings";
+import CompanySettings from "./pages/CompanySettings";
 import EmployeeGroups from "./pages/EmployeeGroups";
 import TaskVerifier from "./pages/TaskVerifier";
 import AIMessaging from "./pages/AIMessaging";
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/auth" element={<Auth />} />
           <Route path="/employee/:id" element={<Employee />} />
           <Route path="/settings" element={<Settings />} />
+          <Route path="/company-settings" element={<CompanySettings />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
