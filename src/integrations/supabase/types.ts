@@ -124,6 +124,7 @@ export type Database = {
           id: string
           level: Database["public"]["Enums"]["employee_level"]
           name: string
+          offer_letter_url: string | null
           role: Database["public"]["Enums"]["employee_role"]
           updated_at: string
           user_id: string
@@ -137,6 +138,7 @@ export type Database = {
           id?: string
           level?: Database["public"]["Enums"]["employee_level"]
           name: string
+          offer_letter_url?: string | null
           role?: Database["public"]["Enums"]["employee_role"]
           updated_at?: string
           user_id: string
@@ -150,6 +152,7 @@ export type Database = {
           id?: string
           level?: Database["public"]["Enums"]["employee_level"]
           name?: string
+          offer_letter_url?: string | null
           role?: Database["public"]["Enums"]["employee_role"]
           updated_at?: string
           user_id?: string
