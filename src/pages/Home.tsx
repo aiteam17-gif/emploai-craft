@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { UserMenu } from "@/components/UserMenu";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Plus, LogOut, Briefcase, Users, CheckCircle2, MessageSquare } from "lucide-react";
+import { Loader2, Plus, LogOut, Briefcase, Users, CheckCircle2, MessageSquare, Building2 } from "lucide-react";
 import { EmployeeGrid } from "@/components/EmployeeGrid";
 import { CreateEmployeeDialog } from "@/components/CreateEmployeeDialog";
 import { DashboardInsights } from "@/components/DashboardInsights";
@@ -105,7 +105,17 @@ const Home = () => {
       </header>
 
       <main className="container mx-auto px-4 py-8 max-w-7xl">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          <Button
+            variant="outline"
+            className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-accent hover:border-primary transition-all"
+            onClick={() => navigate("/company-settings")}
+          >
+            <Building2 className="w-8 h-8 text-primary" />
+            <span className="font-semibold">Company Details</span>
+            <span className="text-xs text-muted-foreground">Manage company info</span>
+          </Button>
+          
           <Button
             variant="outline"
             className="h-24 flex flex-col items-center justify-center gap-2 hover:bg-accent hover:border-primary transition-all"
