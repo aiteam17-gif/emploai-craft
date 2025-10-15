@@ -300,7 +300,7 @@ serve(async (req) => {
       const employeeList = employees.map((emp: { name: string; expertise: string; level: string; role: string }) => 
         `${emp.name} - ${emp.expertise} (${emp.level} ${emp.role})`
       ).join("\n");
-      systemPrompt += `\n\nYour Organization Team:\n${employeeList}\n\nYou work alongside these colleagues. You can refer to them by name when relevant, and you know their areas of expertise. When users ask about getting help from specific departments or roles, reference the appropriate team member by name.`;
+      systemPrompt += `\n\nYour Organization:\nYou work in an organization with ${employees.length} team members. Here is your complete team:\n\n${employeeList}\n\nIMPORTANT: You all work together as colleagues in the same organization. When users ask about specific departments or need help from another area (like HR, Finance, Marketing, etc.), you should reference your colleagues by name. For example, if someone asks about HR matters, you can say "You should reach out to [HR colleague name] who handles all HR functions" or "Let me connect you with [colleague name] from [their department]". You have full knowledge of what each colleague does and can guide users to the right person.`;
     }
 
     // Add memory context if available - now includes all employees' knowledge
