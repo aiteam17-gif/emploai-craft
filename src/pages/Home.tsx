@@ -14,6 +14,7 @@ import { appendAudit } from "@/lib/audit";
 import { TaskHistory } from "@/components/TaskHistory";
 import { ManagerCard } from "@/components/ManagerCard";
 import CompanyDocuments from "@/components/CompanyDocuments";
+import CompanyInfo from "@/components/CompanyInfo";
 
 const Home = () => {
   const [user, setUser] = useState<any>(null);
@@ -140,8 +141,13 @@ const Home = () => {
 
         <DashboardInsights userId={user.id} />
         
-        <div className="mb-6">
-          <CompanyDocuments />
+        <div className="grid lg:grid-cols-3 gap-6 mb-6">
+          <div className="lg:col-span-2">
+            <CompanyInfo />
+          </div>
+          <div className="lg:col-span-1">
+            <CompanyDocuments />
+          </div>
         </div>
 
         <div className="grid lg:grid-cols-3 gap-6">
