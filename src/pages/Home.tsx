@@ -13,6 +13,7 @@ import { useSSE } from "@/hooks/use-sse";
 import { appendAudit } from "@/lib/audit";
 import { TaskHistory } from "@/components/TaskHistory";
 import { ManagerCard } from "@/components/ManagerCard";
+import CompanyDocuments from "@/components/CompanyDocuments";
 
 const Home = () => {
   const [user, setUser] = useState<any>(null);
@@ -138,6 +139,11 @@ const Home = () => {
         <ManagerCard userId={user.id} />
 
         <DashboardInsights userId={user.id} />
+        
+        <div className="mb-6">
+          <CompanyDocuments />
+        </div>
+
         <div className="grid lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2 space-y-6">
             <PriorityBoard userId={user.id} />

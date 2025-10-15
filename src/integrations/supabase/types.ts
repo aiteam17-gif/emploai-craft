@@ -22,6 +22,7 @@ export type Database = {
           company_size: string | null
           created_at: string
           culture: string | null
+          documents: Json | null
           founded_year: number | null
           headquarters: string | null
           id: string
@@ -41,6 +42,7 @@ export type Database = {
           company_size?: string | null
           created_at?: string
           culture?: string | null
+          documents?: Json | null
           founded_year?: number | null
           headquarters?: string | null
           id?: string
@@ -60,6 +62,7 @@ export type Database = {
           company_size?: string | null
           created_at?: string
           culture?: string | null
+          documents?: Json | null
           founded_year?: number | null
           headquarters?: string | null
           id?: string

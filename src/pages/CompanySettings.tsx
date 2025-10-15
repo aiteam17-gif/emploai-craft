@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,8 +6,16 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, Save, Loader2, Building2 } from "lucide-react";
+import { ArrowLeft, Save, Loader2, Building2, Upload, FileText, X } from "lucide-react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+
+interface CompanyDocument {
+  name: string;
+  path: string;
+  size: number;
+  type: string;
+  uploaded_at: string;
+}
 
 interface CompanyInfo {
   id?: string;
@@ -23,13 +31,16 @@ interface CompanyInfo {
   benefits: string;
   culture: string;
   products_services: string;
+  documents: CompanyDocument[];
 }
 
 const CompanySettings = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [companyInfo, setCompanyInfo] = useState<CompanyInfo>({
     company_name: "",
     mission: "",
@@ -43,6 +54,7 @@ const CompanySettings = () => {
     benefits: "",
     culture: "",
     products_services: "",
+    documents: [],
   });
 
   useEffect(() => {
@@ -66,7 +78,10 @@ const CompanySettings = () => {
       if (error && error.code !== "PGRST116") throw error;
       
       if (data) {
-        setCompanyInfo(data);
+        setCompanyInfo({
+          ...data,
+          documents: Array.isArray(data.documents) ? (data.documents as any) : []
+        });
       }
     } catch (error: any) {
       toast({
@@ -85,7 +100,7 @@ const CompanySettings = () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Not authenticated");
 
-      const payload = {
+      const payload: any = {
         ...companyInfo,
         user_id: user.id,
         founded_year: companyInfo.founded_year || null,
@@ -100,11 +115,14 @@ const CompanySettings = () => {
       } else {
         const { data, error } = await supabase
           .from("company_info")
-          .insert(payload)
+          .insert(payload as any)
           .select()
           .single();
         if (error) throw error;
-        setCompanyInfo(data);
+        setCompanyInfo({
+          ...data,
+          documents: Array.isArray(data.documents) ? (data.documents as any) : []
+        });
       }
 
       toast({
@@ -119,6 +137,82 @@ const CompanySettings = () => {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setUploading(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Not authenticated");
+
+      const uploadedDocs: CompanyDocument[] = [];
+
+      for (const file of Array.from(files)) {
+        const filePath = `${user.id}/${Date.now()}_${file.name}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('company-documents')
+          .upload(filePath, file);
+
+        if (uploadError) throw uploadError;
+
+        uploadedDocs.push({
+          name: file.name,
+          path: filePath,
+          size: file.size,
+          type: file.type,
+          uploaded_at: new Date().toISOString()
+        });
+      }
+
+      setCompanyInfo(prev => ({
+        ...prev,
+        documents: [...prev.documents, ...uploadedDocs]
+      }));
+
+      toast({
+        title: "Success",
+        description: `${uploadedDocs.length} document(s) uploaded successfully`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to upload documents",
+        variant: "destructive",
+      });
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
+  const handleRemoveDocument = async (docPath: string) => {
+    try {
+      const { error } = await supabase.storage
+        .from('company-documents')
+        .remove([docPath]);
+
+      if (error) throw error;
+
+      setCompanyInfo(prev => ({
+        ...prev,
+        documents: prev.documents.filter(doc => doc.path !== docPath)
+      }));
+
+      toast({
+        title: "Success",
+        description: "Document removed successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to remove document",
+        variant: "destructive",
+      });
     }
   };
 
@@ -302,6 +396,78 @@ const CompanySettings = () => {
                 rows={4}
               />
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Company Documents</CardTitle>
+            <CardDescription>
+              Upload PDFs, documents, and other files that employees should have access to
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <input
+                ref={fileInputRef}
+                type="file"
+                onChange={handleFileUpload}
+                multiple
+                accept=".pdf,.doc,.docx,.txt,.csv,.xlsx,.xls"
+                className="hidden"
+              />
+              <Button
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading}
+              >
+                {uploading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <Upload className="mr-2 h-4 w-4" />
+                    Upload Documents
+                  </>
+                )}
+              </Button>
+              <p className="text-sm text-muted-foreground">
+                Accepted formats: PDF, DOC, DOCX, TXT, CSV, XLS, XLSX
+              </p>
+            </div>
+
+            {companyInfo.documents.length > 0 && (
+              <div className="space-y-2">
+                <Label>Uploaded Documents</Label>
+                <div className="space-y-2">
+                  {companyInfo.documents.map((doc, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 border rounded-lg"
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="h-4 w-4 text-muted-foreground" />
+                        <div>
+                          <p className="text-sm font-medium">{doc.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(doc.size / 1024).toFixed(2)} KB • {new Date(doc.uploaded_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleRemoveDocument(doc.path)}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
           </CardContent>
         </Card>
 
