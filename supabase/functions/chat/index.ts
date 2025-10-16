@@ -350,12 +350,24 @@ serve(async (req) => {
 
     // Check if we should use image generation model
     const shouldGenerateImages = generateImage || 
-      messages.some((m: any) => 
-        typeof m.content === 'string' && 
-        (m.content.toLowerCase().includes('generate image') || 
-         m.content.toLowerCase().includes('create image') ||
-         m.content.toLowerCase().includes('show me'))
-      );
+      messages.some((m: any) => {
+        if (typeof m.content === 'string') {
+          const lowerContent = m.content.toLowerCase();
+          return (
+            lowerContent.includes('generate image') || 
+            lowerContent.includes('create image') ||
+            lowerContent.includes('create a picture') ||
+            lowerContent.includes('generate a picture') ||
+            lowerContent.includes('make an image') ||
+            lowerContent.includes('make a picture') ||
+            lowerContent.includes('draw') ||
+            lowerContent.includes('illustrate') ||
+            lowerContent.includes('show me a picture') ||
+            lowerContent.includes('visualize')
+          );
+        }
+        return false;
+      });
 
     const requestBody: any = {
       model: shouldGenerateImages ? "google/gemini-2.5-flash-image-preview" : "google/gemini-2.5-flash",
